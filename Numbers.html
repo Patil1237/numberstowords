@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Numbers to Words Converter</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #121212; /* Dark background */
+            margin: 0;
+            padding: 10px;
+        }
+
+        .container {
+            text-align: center;
+            background: #1e1e1e; /* Darker container background */
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+            width: 100%;
+            max-width: 500px; /* Increased max width for better mobile use */
+            box-sizing: border-box;
+            transition: transform 0.3s;
+        }
+
+        .container:hover {
+            transform: scale(1.02);
+        }
+
+        h1 {
+            color: rgb(119, 50, 168); /* Main theme color */
+            margin-bottom: 20px;
+            font-size: 2em; /* Increased font size */
+        }
+
+        input {
+            width: 100%;
+            padding: 20px; /* Increased padding for better touch targets */
+            margin-bottom: 15px;
+            border: 2px solid rgb(119, 50, 168); /* Border color matching theme */
+            border-radius: 8px;
+            box-sizing: border-box;
+            font-size: 1.2em; /* Larger text for better readability */
+            background: #333; /* Dark input background */
+            color: white; /* White text for contrast */
+            transition: border-color 0.3s;
+        }
+
+        input:focus {
+            border-color: #ff80ab; /* Lighter focus border color */
+            outline: none;
+        }
+
+        button {
+            padding: 20px; /* Increased padding */
+            cursor: pointer;
+            background-color: rgb(119, 50, 168); /* Theme color */
+            color: white;
+            border: none;
+            border-radius: 8px;
+            transition: background-color 0.3s;
+            font-size: 1.2em; /* Larger button text */
+            width: 100%; /* Full width button */
+        }
+
+        button:hover {
+            background-color: #a64b7a; /* Darker shade on hover */
+        }
+
+        #outputContainer {
+            display: none; /* Hide the output container initially */
+            margin-top: 30px; /* Increased margin for more space */
+            padding: 20px; /* Padding inside the output div */
+            background: #2e2e2e; /* Dark background for output container */
+            border-radius: 8px;
+        }
+
+        #boldResult {
+            margin-top: 10px;
+            font-weight: bold;
+            font-size: 1.2em; /* Same size as the button */
+            color: #e0e0e0; /* Light gray for result text */
+        }
+
+        /* Media queries for responsiveness */
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 1.8em; /* Slightly smaller heading */
+            }
+
+            #boldResult {
+                font-size: 1.2em; /* Adjust text size for better readability */
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Numbers to Words Converter</h1>
+        <input type="text" id="numberInput" placeholder="Enter amount (e.g., 1.23, 1000000)">
+        <button id="convertButton">Convert</button>
+        <div id="outputContainer">
+            <div id="boldResult"></div>
+        </div>
+    </div>
+    <script>
+        function numberToWords(num) {
+            if (num === 0) return "zero";
+
+            const belowTwenty = [
+                "", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine",
+                "ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen", "sixteen",
+                "seventeen", "eighteen", "nineteen"
+            ];
+            const belowHundred = [
+                "", "", "twenty", "thirty", "forty", "fifty", "sixty", "seventy", "eighty", "ninety"
+            ];
+
+            const words = [];
+
+            // Handling crores
+            if (Math.floor(num / 10000000) > 0) {
+                words.push(numberToWords(Math.floor(num / 10000000)) + " crore");
+                num %= 10000000;
+            }
+            // Handling lakhs
+            if (Math.floor(num / 100000) > 0) {
+                words.push(numberToWords(Math.floor(num / 100000)) + " lakh");
+                num %= 100000;
+            }
+            // Handling thousands
+            if (Math.floor(num / 1000) > 0) {
+                words.push(numberToWords(Math.floor(num / 1000)) + " thousand");
+                num %= 1000;
+            }
+            // Handling hundreds
+            if (Math.floor(num / 100) > 0) {
+                words.push(belowTwenty[Math.floor(num / 100)] + " hundred");
+                num %= 100;
+                if (num > 0) words.push("and"); // Add "and" if there are more numbers after hundreds
+            }
+            // Handling tens and units
+            if (num > 0) {
+                if (num < 20) {
+                    words.push(belowTwenty[num]);
+                } else {
+                    words.push(belowHundred[Math.floor(num / 10)]);
+                    if (num % 10 > 0) {
+                        words.push(belowTwenty[num % 10]);
+                    }
+                }
+            }
+
+            return words.join(" ").trim();
+        }
+
+        function toCamelCase(str) {
+            return str
+                .split(" ")
+                .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+                .join(" "); // Join with spaces to keep proper spacing
+        }
+
+        document.getElementById('convertButton').addEventListener('click', () => {
+            const input = document.getElementById('numberInput').value;
+            const boldResultDiv = document.getElementById('boldResult');
+            const outputContainer = document.getElementById('outputContainer');
+
+            // Handling decimal values for paise
+            const [whole, decimal] = input.split('.'); // Split into whole and decimal parts
+            let number = parseInt(whole, 10); // Convert whole part to integer
+            let paise = decimal ? parseInt(decimal.slice(0, 2), 10) : 0; // Get up to two digits for paise
+
+            if (isNaN(number) || (decimal && isNaN(paise))) {
+                boldResultDiv.textContent = "Invalid input. Please enter a valid number."; // Display error in bold result
+                outputContainer.style.display = "block"; // Show output container for error messages
+            } else {
+                const words = numberToWords(number);
+                const camelCaseWords = toCamelCase(words) + (paise > 0 ? " And " + toCamelCase(numberToWords(paise)) + " Paise" : "") + " Only"; // Append "Only"
+                boldResultDiv.textContent = camelCaseWords; // Set the result
+                outputContainer.style.display = "block"; // Show output container after conversion
+            }
+        });
+    </script>
+</body>
+</html>
